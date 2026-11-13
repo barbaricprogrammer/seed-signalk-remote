@@ -11,14 +11,30 @@ Wio  --GET /chart?lat&lon&mpp-->  tile-relay  --GET /signalk/v1/api/resources/ch
 
 ## Run on the Pi (Docker)
 
-```bash
-docker run -d --name tile-relay --restart unless-stopped --network host \
-  -e SK_URL=http://localhost:3000 \
-  ghcr.io/barbaricprogrammer/seed-signalk-remote/tile-relay:latest
-```
+1. **Make the image pullable.** GitHub Actions publishes `ghcr.io/barbaricprogrammer/seed-signalk-remote/tile-relay` for amd64 and arm64
+   (`.github/workflows/tile-relay-image.yml`). New packages start private: on GitHub open the package's settings and set visibility to
+   Public, or run `docker login ghcr.io` on the Pi.
+2. **Install Docker** on the Pi if needed: `curl -fsSL https://get.docker.com | sh`, then `sudo usermod -aG docker $USER` and log in again.
+3. **Start the relay** (copy `docker-compose.yml` to the Pi, or `git clone` this repo):
 
-The image is built for amd64 and arm64 by `.github/workflows/tile-relay-image.yml`.
-Set `RELAY_HOST` / `RELAY_PORT` (default 8090) in the firmware's `src/config.h` to the Pi.
+   ```bash
+   cd tile-relay
+   docker compose up -d
+   ```
+
+   Or without compose:
+
+   ```bash
+   docker run -d --name tile-relay --restart unless-stopped --network host \
+     -e SK_URL=http://localhost:3000 \
+     ghcr.io/barbaricprogrammer/seed-signalk-remote/tile-relay:latest
+   ```
+
+4. **Check it:** `curl http://<pi>:8090/health`, or open `http://<pi>:8090/chart?lat=39.33&lon=-76.405&mpp=8&fmt=png` in a browser.
+5. **Point the Wio at it:** set `RELAY_HOST` to the Pi's address in `src/config.h` and reflash. The Debug view's "Tile relay" line shows its status.
+6. **Update later:** `docker compose pull && docker compose up -d`. Logs: `docker logs -f tile-relay`.
+
+If Signal K needs a token for chart resources, pass a read-only token as `SK_TOKEN` through the environment (a `.env` file next to the compose file; never commit it).
 
 ## Run without Docker
 

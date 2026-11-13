@@ -1,0 +1,13 @@
+# Tile relay for the Wio Terminal remote. Run on the same Pi as Signal K:
+#   docker compose up -d
+# Update:  docker compose pull && docker compose up -d
+services:
+  tile-relay:
+    image: ghcr.io/barbaricprogrammer/seed-signalk-remote/tile-relay:latest
+    container_name: tile-relay
+    restart: unless-stopped
+    network_mode: host            # reaches Signal K on localhost:3000 and serves the Wio on port 8090
+    environment:
+      SK_URL: http://localhost:3000
+      # SK_TOKEN: ""              # only if Signal K requires a token for chart resources (put it in a .env file, never commit it)
+      # CACHE_TILES: 96           # decoded tiles kept in RAM; lower on a small Pi
